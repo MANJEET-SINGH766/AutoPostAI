@@ -115,42 +115,74 @@ const AIComposer = () => {
       </div>
 
       {/* Cards */}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {dummyGenerationData.map((item: any) => (
-          <div
-            key={item._id}
-            className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition"
-          >
-            {item.mediaUrl && (
-              <img
-                src={item.mediaUrl}
-                alt=""
-                className="w-full h-52 object-cover"
-              />
-            )}
+<div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+  {dummyGenerationData.map((item: any) => (
+    <div
+      key={item._id}
+      className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition"
+    >
+      {item.mediaUrl && (
+        <img
+          src={item.mediaUrl}
+          alt=""
+          className="w-full h-52 object-cover"
+        />
+      )}
 
-            <div className="p-5">
-              <div className="flex justify-between mb-3">
-                <span className="text-xs text-gray-500">
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </span>
+      <div className="p-5">
+        <div className="flex justify-between mb-3">
+          <span className="text-xs text-gray-500">
+            {new Date(item.createdAt).toLocaleDateString()}
+          </span>
 
-                <span className="bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full">
-                  {item.tone}
-                </span>
-              </div>
+          <span className="bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full">
+            {item.tone}
+          </span>
+        </div>
 
-              <p className="text-gray-700 line-clamp-5">
-                {item.content}
-              </p>
+        <p className="text-gray-700 line-clamp-4 mb-4">
+          {item.content}
+        </p>
 
-              <button className="mt-4 text-red-500 font-medium">
-                View More →
-              </button>
-            </div>
+        <div className="border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            Schedule this post
+          </h4>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="date"
+              className="border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500"
+            />
+
+            <input
+              type="time"
+              className="border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500"
+            />
           </div>
-        ))}
+
+          <button
+            className="
+              w-full
+              mt-4
+              bg-gradient-to-r
+              from-red-500
+              to-pink-500
+              text-white
+              py-3
+              rounded-xl
+              font-medium
+              hover:scale-105
+              transition
+            "
+          >
+            🚀 Schedule Post
+          </button>
+        </div>
       </div>
+    </div>
+  ))}
+</div>
     </div>
   );
 };
