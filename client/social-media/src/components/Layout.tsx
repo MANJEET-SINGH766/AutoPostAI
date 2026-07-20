@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import { MenuIcon } from "lucide-react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -15,6 +15,11 @@ const Layout = () => {
   const title = pageTitles[location.pathname] || "SocialAI";
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isAuthenticated = !!localStorage.getItem("token");
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">

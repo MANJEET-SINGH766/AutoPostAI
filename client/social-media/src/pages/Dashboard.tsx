@@ -6,6 +6,7 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { api } from "../services/api";
 
 interface Activity {
   _id: string;
@@ -25,47 +26,27 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const posts = [
-          { id: 1, status: "published" },
-          { id: 2, status: "published" },
-          { id: 3, status: "scheduled" },
-          { id: 4, status: "scheduled" },
-        ];
+        const posts = await api.posts.getPosts();
+        const accounts = await api.socialAuth.syncAccounts();
 
-        const accounts = [
-          { id: 1, connected: true },
-          { id: 2, connected: true },
-          { id: 3, connected: false },
-        ];
-
-        const activityData: Activity[] = [
-          {
-            _id: "1",
-            description: "Published Instagram post",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            _id: "2",
-            description: "Scheduled LinkedIn post",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            _id: "3",
-            description: "Connected X account",
-            createdAt: new Date().toISOString(),
-          },
-        ];
+        const pendingCount = posts.filter((p: any) => p.status === 'pending').length;
+        const completedCount = posts.filter((p: any) => p.status === 'completed').length;
 
         setStats({
-          schedule: posts.filter(
-            (post) => post.status === "scheduled"
-          ).length,
-          published: posts.filter(
-            (post) => post.status === "published"
-          ).length,
-          connectedAccounts: accounts.filter(
-            (account) => account.connected
-          ).length,
+          schedule: pendingCount,
+          published: completedCount,
+          connectedAccounts: accounts.length,
+        });
+
+        // Generate activity logs based on recent posts
+        const activityData: Activity[] = posts.slice(0, 5).map((p: any) => {
+          const platforms = p.accounts.map((a: any) => a.platform.toUpperCase()).join(', ');
+          const actionVerb = p.status === 'completed' ? 'Published' : p.status === 'pending' ? 'Scheduled' : 'Processing/Failed';
+          return {
+            _id: p._id,
+            description: `${actionVerb} post on ${platforms}: "${p.content.text.substring(0, 60)}${p.content.text.length > 60 ? '...' : ''}"`,
+            createdAt: p.updatedAt || p.createdAt,
+          };
         });
 
         setActivities(activityData);

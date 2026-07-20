@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   CalendarDaysIcon,
   LayoutDashboardIcon,
@@ -7,6 +6,7 @@ import {
   LogOutIcon
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { api } from '../services/api';
 
 const Sidebar = ({
   isOpen,
@@ -15,15 +15,11 @@ const Sidebar = ({
   isOpen: boolean;
   setIsOpen: (val: boolean) => void;
 }) => {
-  const {logout,user}={
-    logout:()=>{
-      window.location.href="/"
-    },
-    user:{
-      name:"John Doe",
-      email:"john.doe@example.com"
-    }
-  }
+  const logout = () => {
+    api.auth.logout();
+    window.location.href = "/login";
+  };
+  const user = api.auth.getUser() || { name: "Guest User", email: "" };
   const location = useLocation();
 
   const navItems = [

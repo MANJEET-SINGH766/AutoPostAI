@@ -3,16 +3,43 @@ import {
   Trash2Icon,
   CheckCircle2Icon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PLATFORMS,
-  dummyAccountsData,
 } from "../assets/assets";
+import { api } from "../services/api";
 
 const Accounts = () => {
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const accounts = dummyAccountsData;
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true);
+      const data = await api.socialAuth.syncAccounts();
+      setAccounts(data);
+    } catch (err: any) {
+      console.error("Failed to sync accounts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const handleConnect = async (platformId: string) => {
+    try {
+      const res = await api.socialAuth.getConnectUrl(platformId);
+      if (res.url) {
+        window.location.href = res.url;
+      }
+    } catch (err: any) {
+      alert(err.message || `Failed to connect to ${platformId}`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -58,79 +85,85 @@ const Accounts = () => {
       </div>
 
       {/* Accounts Grid */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {accounts.map((account) => {
-          const platform = PLATFORMS.find(
-            (p) => p.id === account.platform
-          );
+      {loading ? (
+        <div className="text-center py-12 rounded-3xl border border-gray-200 bg-white shadow-sm font-semibold text-gray-500">
+          Syncing connected accounts...
+        </div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {accounts.map((account) => {
+            const platform = PLATFORMS.find(
+              (p) => p.id === account.platform
+            );
 
-          if (!platform) return null;
+            if (!platform) return null;
 
-          const Icon = platform.icon;
+            const Icon = platform.icon;
 
-          return (
-            <div
-              key={account._id}
-              className="group rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="rounded-2xl bg-gray-100 p-3 transition-all group-hover:bg-primary/10">
-                    <Icon className="size-6" />
+            return (
+              <div
+                key={account._id}
+                className="group rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-2xl bg-gray-100 p-3 transition-all group-hover:bg-primary/10">
+                      <Icon className="size-6" />
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {platform.name}
+                      </h3>
+
+                      <p className="text-sm text-gray-500">
+                        @{account.handle}
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {platform.name}
-                    </h3>
-
-                    <p className="text-sm text-gray-500">
-                      @{account.handle}
-                    </p>
-                  </div>
+                  <CheckCircle2Icon className="size-5 text-green-500" />
                 </div>
 
-                <CheckCircle2Icon className="size-5 text-green-500" />
+                <p className="mt-4 text-sm text-gray-500">
+                  {platform.description}
+                </p>
+
+                <div className="my-4 h-px bg-gray-100" />
+
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                    {account.status}
+                  </span>
+
+                  <button className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600">
+                    <Trash2Icon className="size-4" />
+                    Disconnect
+                  </button>
+                </div>
               </div>
+            );
+          })}
 
-              <p className="mt-4 text-sm text-gray-500">
-                {platform.description}
-              </p>
-
-              <div className="my-4 h-px bg-gray-100" />
-
-              <div className="flex items-center justify-between">
-                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                  {account.status}
-                </span>
-
-                <button className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600">
-                  <Trash2Icon className="size-4" />
-                  Disconnect
-                </button>
-              </div>
+          {/* Add Card */}
+          <button
+            onClick={() => setShowPlatformPicker(true)}
+            className="flex min-h-[220px] flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-300 bg-white transition-all duration-300 hover:border-primary hover:bg-primary/5 cursor-pointer"
+          >
+            <div className="rounded-full bg-primary/10 p-4">
+              <PlusIcon className="size-8 text-primary" />
             </div>
-          );
-        })}
 
-        {/* Add Card */}
-        <button
-          onClick={() => setShowPlatformPicker(true)}
-          className="flex min-h-[220px] flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-300 bg-white transition-all duration-300 hover:border-primary hover:bg-primary/5"
-        >
-          <div className="rounded-full bg-primary/10 p-4">
-            <PlusIcon className="size-8 text-primary" />
-          </div>
+            <h3 className="mt-4 font-semibold text-gray-900">
+              Add New Account
+            </h3>
 
-          <h3 className="mt-4 font-semibold text-gray-900">
-            Add New Account
-          </h3>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Connect another platform
-          </p>
-        </button>
-      </div>
+            <p className="mt-1 text-sm text-gray-500">
+              Connect another platform
+            </p>
+          </button>
+        </div>
+      )}
 
       {/* Platform Picker Modal */}
       {showPlatformPicker && (
@@ -156,7 +189,8 @@ const Accounts = () => {
                 return (
                   <button
                     key={platform.id}
-                    className="group flex items-center justify-between rounded-2xl border border-gray-200 p-4 transition-all duration-300 hover:border-primary hover:bg-primary/5"
+                    onClick={() => handleConnect(platform.id)}
+                    className="group flex items-center justify-between rounded-2xl border border-gray-200 p-4 transition-all duration-300 hover:border-primary hover:bg-primary/5 cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div className="rounded-xl bg-gray-100 p-3 group-hover:bg-primary/10">

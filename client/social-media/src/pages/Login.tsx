@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MailIcon, LockIcon, ArrowRightIcon, User2Icon } from "lucide-react";
 
+import { api } from "../services/api";
+
 export default function Login() {
     const [loginState, setLoginState] = useState(true);
     const [name, setName] = useState("");
@@ -13,10 +15,18 @@ export default function Login() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            if (loginState) {
+                await api.auth.login(email, password);
+            } else {
+                await api.auth.register(email, password, name);
+            }
             navigate("/dashboard");
-        }, 1000);
+        } catch (error: any) {
+            alert(error.message || "Authentication failed. Make sure your server is running.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
