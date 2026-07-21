@@ -1,4 +1,4 @@
-# AutoPostAI 🚀
+# AutoPostAI 
 
 An enterprise-grade, AI-powered social media management and scheduling SaaS platform. It allows users to generate tailored, platform-specific content using Google Gemini AI, connect social accounts securely via OAuth (powered by Zernio), and automate scheduling and publishing with a background worker engine.
 
@@ -23,28 +23,28 @@ An enterprise-grade, AI-powered social media management and scheduling SaaS plat
 ## 🔗 Demo Links & Visuals
 
 * 🌐 **Live Demo:** [https://autopostai.vercel.app](https://autopostai.vercel.app) *(Placeholder)*
-* 🎨 **Frontend Web App:** [https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/client](https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/client)
-* ⚙️ **Backend Service API:** [https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/server](https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/server)
+*  **Frontend Web App:** [https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/client](https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/client)
+*  **Backend Service API:** [https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/server](https://github.com/MANJEET-SINGH766/AutoPostAI/tree/main/server)
 
-### 📹 Product Walkthrough Video
-* 📺 **Demo Video:** [Watch the walkthrough on YouTube](https://youtube.com) *(Placeholder)*
-
----
-
-## ✨ Features
-
-- 🧠 **AI-Powered Copywriting**: Harness Google Gemini AI (`gemini-3.5-flash`) to generate high-performing posts optimized for specific platforms (LinkedIn, X/Twitter, Instagram, Facebook), tailored to tone, audience, length, and structured JSON formatting.
-- 🔑 **Multi-Platform OAuth Connections**: Securely link LinkedIn, Twitter/X, Instagram, and Facebook profiles in a unified dashboard leveraging **Zernio** API integrations.
-- 🔒 **Robust JWT Authentication**: State-of-the-art password hashing with Bcrypt.js and secure access session validation via JSON Web Tokens.
-- 📅 **Smart Post Scheduling**: Setup publish times with an automated scheduler daemon tracking MongoDB records and triggering precise publishing schedules.
-- ⚡ **Background Queue Ready**: Optimized for scaling with BullMQ and Redis brokers for distributed task queuing in production-grade deployments.
-- 🖥️ **Sleek Responsive Dashboard**: A responsive modern SaaS dashboard built on Vite, React 19, Tailwind CSS 4, and Lucide React.
-- 💾 **MongoDB Storage**: Schemas designed with Mongoose, ensuring data integrity, cascading updates, and populating queries.
-- 📂 **Multipart Media Uploads**: Built-in static public upload service powered by Multer for attachments.
+###  Product Walkthrough Video
+*  **Demo Video:** [Watch the walkthrough on YouTube](https://youtube.com) *(Placeholder)*
 
 ---
 
-## 🛠️ Tech Stack
+##  Features
+
+-  **AI-Powered Copywriting**: Harness Google Gemini AI (`gemini-3.5-flash`) to generate high-performing posts optimized for specific platforms (LinkedIn, X/Twitter, Instagram, Facebook), tailored to tone, audience, length, and structured JSON formatting.
+-  **Multi-Platform OAuth Connections**: Securely link LinkedIn, Twitter/X, Instagram, and Facebook profiles in a unified dashboard leveraging **Zernio** API integrations.
+-  **Robust JWT Authentication**: State-of-the-art password hashing with Bcrypt.js and secure access session validation via JSON Web Tokens.
+- **Smart Post Scheduling**: Setup publish times with an automated scheduler daemon tracking MongoDB records and triggering precise publishing schedules.
+- **Background Queue Ready**: Optimized for scaling with BullMQ and Redis brokers for distributed task queuing in production-grade deployments.
+- **Sleek Responsive Dashboard**: A responsive modern SaaS dashboard built on Vite, React 19, Tailwind CSS 4, and Lucide React.
+- **MongoDB Storage**: Schemas designed with Mongoose, ensuring data integrity, cascading updates, and populating queries.
+- **Multipart Media Uploads**: Built-in static public upload service powered by Multer for attachments.
+
+---
+
+##  Tech Stack
 
 | Layer | Technology | Usage Description |
 |:---|:---|:---|
@@ -60,7 +60,7 @@ An enterprise-grade, AI-powered social media management and scheduling SaaS plat
 
 ---
 
-## 📐 Project Architecture
+## Project Architecture
 
 ```mermaid
 graph TD
@@ -86,7 +86,7 @@ graph TD
 
 ---
 
-## 📁 Folder Structure
+##  Folder Structure
 
 ```
 AutoPostAI/
@@ -152,7 +152,7 @@ AutoPostAI/
 
 ---
 
-## 🚀 Installation & Local Setup
+## Installation & Local Setup
 
 ### Prerequisites
 * **Node.js** (v18.x or higher)
@@ -197,7 +197,7 @@ npm run dev
 
 ---
 
-## 🔑 Environment Variables
+##  Environment Variables
 
 | Variable Name | Required | Default Value | Description |
 |:---|:---:|:---|:---|
@@ -212,9 +212,9 @@ npm run dev
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
-### 🔐 Auth API
+###  Auth API
 * **Base URL**: `/api/auth`
 
 | Method | Endpoint | Description | Auth Required |
@@ -222,14 +222,14 @@ npm run dev
 | `POST` | `/register` | Sign up a new user account | ❌ No |
 | `POST` | `/login` | Authorize email/password and returns JWT | ❌ No |
 
-### 🧠 AI API
+###  AI API
 * **Base URL**: `/api/ai`
 
 | Method | Endpoint | Description | Auth Required |
 |:---:|:---|:---|:---:|
 | `POST` | `/generate` | Generate post text structured in JSON via Gemini | ✔️ Yes |
 
-### 📅 Posts API
+###  Posts API
 * **Base URL**: `/api/posts`
 
 | Method | Endpoint | Description | Auth Required |
@@ -252,9 +252,9 @@ npm run dev
 
 ---
 
-## 🔄 Core Workflows
+##  Core Workflows
 
-### 🛡️ Authentication Flow
+###  Authentication Flow
 ```
 [Client Login Input] ──> [Verify Credentials (Mongoose)] 
                                  │
@@ -265,7 +265,7 @@ npm run dev
 [Request Protected API] <── [Verify Bearer Token] <── [Attach Token to Header]
 ```
 
-### 📅 Scheduling Workflow
+###  Scheduling Workflow
 ```
 [User Selects Schedule Time] ──> [Save to MongoDB as "pending"]
                                          │
@@ -279,7 +279,7 @@ npm run dev
                              [Call Zernio API publish] ──> [Set status to "completed"]
 ```
 
-### 🧠 AI Copywriting Workflow
+###  AI Copywriting Workflow
 ```
 [Topic + Tone Prompt Options] ──> [Build Strict Platform Prompt Rules]
                                                  │
@@ -292,7 +292,7 @@ npm run dev
 
 ---
 
-## 🖼️ Screenshots
+##  Screenshots
 
 * **Dashboard Overview**
   ![Dashboard Placeholder](https://via.placeholder.com/800x450.png?text=AutoPostAI+Dashboard+Overview)
@@ -305,7 +305,7 @@ npm run dev
 
 ---
 
-## 🌐 Deployment Instructions
+##  Deployment Instructions
 
 ### Frontend (Vercel)
 1. Import repository to Vercel.
@@ -331,18 +331,18 @@ npm run dev
 
 ---
 
-## 🔮 Future Enhancements
+##  Future Enhancements
 
-- 📁 **Multi-Image Attachments**: Allow scheduling posts with multiple images or carousel frames.
-- 👥 **Team Workspaces**: Enable collaboration features, approvals, and shared team assets.
-- 📊 **Unified Analytics**: Tracking engagement stats, likes, comments, and impressions natively.
-- 🏷️ **AI Hashtag Suggestion**: Real-time context-aware hashtag generation tool inside composer.
-- 🎨 **AI Image Creation**: Integrations with Imagen/DALL-E to generate graphics from text directly.
-- 📅 **Interactive Calendar View**: Drag-and-drop posts between dates to reschedule visual calendars.
+-  **Multi-Image Attachments**: Allow scheduling posts with multiple images or carousel frames.
+-  **Team Workspaces**: Enable collaboration features, approvals, and shared team assets.
+-  **Unified Analytics**: Tracking engagement stats, likes, comments, and impressions natively.
+-  **AI Hashtag Suggestion**: Real-time context-aware hashtag generation tool inside composer.
+-  **AI Image Creation**: Integrations with Imagen/DALL-E to generate graphics from text directly.
+- **Interactive Calendar View**: Drag-and-drop posts between dates to reschedule visual calendars.
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions make the open-source community an amazing place to learn, inspire, and create.
 1. Fork the Project.
@@ -353,14 +353,14 @@ Contributions make the open-source community an amazing place to learn, inspire,
 
 ---
 
-## 📄 License
+##  License
 This project is open-source, licensed under the **MIT License**. See `LICENSE` for more information.
 
 ---
 
-## ✍️ Author
+##  Author
 
 **Manjeet Singh**
 * 🐙 **GitHub Profile**: [@MANJEET-SINGH766](https://github.com/MANJEET-SINGH766)
-* 💼 **LinkedIn Profile**: [LinkedIn](https://linkedin.com) *(Placeholder)*
-* 📧 **Email**: [singhmanjeet766853@gmail.com](mailto:singhmanjeet766853@gmail.com)
+*  **LinkedIn Profile**: [LinkedIn](https://linkedin.com) *(Placeholder)*
+*  **Email**: [singhmanjeet766853@gmail.com](mailto:singhmanjeet766853@gmail.com)
