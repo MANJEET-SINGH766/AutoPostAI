@@ -4,7 +4,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const socialAuthRoutes = require('./routes/socialAuth');
 const postRoutes = require('./routes/posts');
-const aiRoutes = require('./routes/ai');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 

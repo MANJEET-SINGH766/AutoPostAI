@@ -41,6 +41,16 @@ const Accounts = () => {
     }
   };
 
+  const handleDisconnect = async (accountId: string) => {
+    if (!confirm("Are you sure you want to disconnect this account?")) return;
+    try {
+      await api.socialAuth.disconnectAccount(accountId);
+      await fetchAccounts();
+    } catch (err: any) {
+      alert(err.message || "Failed to disconnect account");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -136,7 +146,10 @@ const Accounts = () => {
                     {account.status}
                   </span>
 
-                  <button className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600">
+                  <button 
+                    onClick={() => handleDisconnect(account._id)}
+                    className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 cursor-pointer"
+                  >
                     <Trash2Icon className="size-4" />
                     Disconnect
                   </button>

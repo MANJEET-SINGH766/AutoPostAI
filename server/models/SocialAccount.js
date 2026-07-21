@@ -29,6 +29,9 @@ const socialAccountSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
+    accountId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { default: Zernio } = require('@zernio/node');
+
+const zernio = new Zernio({ apiKey: process.env.ZERNIO_API_KEY });
 
 // Helper function to sign JWT tokens
 const generateToken = (userId) => {
@@ -31,10 +34,28 @@ const register = async (req, res) => {
     });
 
     if (user) {
+      let zernioProfileId = '';
+      try {
+        const { data } = await zernio.profiles.createProfile({
+          body: {
+            name: `user_${user._id}`,
+            description: `Profile for ${user.email}`,
+          },
+        });
+        if (data && data.profile && data.profile._id) {
+          zernioProfileId = data.profile._id;
+          user.zernioProfileId = zernioProfileId;
+          await user.save();
+        }
+      } catch (err) {
+        console.error('Failed to create Zernio profile on registration:', err.message);
+      }
+
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
+        zernioProfileId,
         token: generateToken(user._id),
       });
     } else {

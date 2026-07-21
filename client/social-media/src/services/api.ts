@@ -71,6 +71,15 @@ export const api = {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to sync accounts');
       return data; // returns array of synced accounts
+    },
+    disconnectAccount: async (accountId: string) => {
+      const res = await fetch(`${API_BASE_URL}/social-auth/${accountId}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to disconnect account');
+      return data;
     }
   },
 
@@ -137,11 +146,20 @@ export const api = {
 
   // AI Content Generator Operations
   ai: {
-    generateContent: async (prompt: string, tone: string, aiImage: boolean) => {
+    generateContent: async (params: {
+      platform: string;
+      topic: string;
+      tone: string;
+      length: string;
+      targetAudience: string;
+      hashtags: boolean;
+      emojis: boolean;
+      callToAction: boolean;
+    }) => {
       const res = await fetch(`${API_BASE_URL}/ai/generate`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ prompt, tone, aiImage }),
+        body: JSON.stringify(params),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to generate AI content');

@@ -1,4 +1,8 @@
 const SocialAccount = require('../models/SocialAccount');
+const User = require('../models/User');
+const { default: Zernio } = require('@zernio/node');
+
+const zernio = new Zernio({ apiKey: process.env.ZERNIO_API_KEY });
 
 // @desc    Get Zernio OAuth connection URL for a platform
 // @route   GET /api/social-auth/connect/:platform
@@ -13,28 +17,50 @@ const getConnectUrl = async (req, res) => {
 
   try {
     const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
-    const isSandboxMode = !process.env.ZERNIO_API_KEY || process.env.ZERNIO_API_KEY.includes('sk_62d4aab5589715b97e16bfcd7b3d406d6a8107810aa0f9dd0ec39b97334da565');
 
-    if (isSandboxMode) {
-      // Redirect directly to callback with simulated sandbox profile
-      const mockHandles = {
-        twitter: 'TwitterSandbox',
-        linkedin: 'LinkedInCreator',
-        facebook: 'FacebookBiz',
-        instagram: 'InstaBrand'
-      };
-      const handle = mockHandles[platform.toLowerCase()] || 'SandboxUser';
-      const url = `${serverUrl}/api/social-auth/callback?platform=${platform}&handle=${handle}&access_token=mock_access_token&refresh_token=mock_refresh_token&user_id=${req.user._id}`;
-      return res.json({ url });
+    if (!process.env.ZERNIO_API_KEY) {
+      return res.status(400).json({ message: 'Zernio API key is not configured.' });
     }
 
-    const zernioBaseUrl = 'https://api.zernio.com/oauth/connect';
-    const callbackUrl = encodeURIComponent(`${serverUrl}/api/social-auth/callback`);
+    // Lazily create Zernio Profile if not already created
+    let zernioProfileId = req.user.zernioProfileId;
+    if (!zernioProfileId) {
+      try {
+        const { data: profileData } = await zernio.profiles.createProfile({
+          body: {
+            name: `user_${req.user._id}`,
+            description: `Profile for ${req.user.email}`,
+          },
+        });
+        if (profileData && profileData.profile && profileData.profile._id) {
+          zernioProfileId = profileData.profile._id;
+          await User.findByIdAndUpdate(req.user._id, { zernioProfileId });
+          req.user.zernioProfileId = zernioProfileId;
+        }
+      } catch (err) {
+        console.error('Failed to create lazy Zernio profile:', err.message);
+        return res.status(500).json({ message: `Could not create Zernio Profile: ${err.message}` });
+      }
+    }
 
-    // Build authorization redirect url
-    const url = `${zernioBaseUrl}/${platform}?api_key=${process.env.ZERNIO_API_KEY}&user_id=${req.user._id}&redirect_uri=${callbackUrl}`;
+    const callbackUrl = `${serverUrl}/api/social-auth/callback?userId=${req.user._id}`;
 
-    res.json({ url });
+    // Request connection URL using official SDK
+    const { data } = await zernio.connect.getConnectUrl({
+      path: {
+        platform: platform.toLowerCase()
+      },
+      query: {
+        profileId: zernioProfileId,
+        redirect_url: callbackUrl
+      }
+    });
+
+    if (!data || !data.authUrl) {
+      return res.status(500).json({ message: 'No authorization URL returned from Zernio.' });
+    }
+
+    res.json({ url: data.authUrl });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -44,24 +70,39 @@ const getConnectUrl = async (req, res) => {
 // @route   GET /api/social-auth/callback
 // @access  Public
 const handleCallback = async (req, res) => {
-  const { platform, handle, access_token, refresh_token, user_id } = req.query;
+  const { userId, user_id } = req.query;
+  const targetUserId = userId || user_id;
 
-  if (!platform || !handle || !user_id) {
-    return res.status(400).json({ message: 'Missing callback parameters' });
+  if (!targetUserId) {
+    return res.status(400).json({ message: 'Missing user ID in callback' });
   }
 
   try {
-    // Save or update connection record
-    await SocialAccount.findOneAndUpdate(
-      { userId: user_id, platform: platform.toLowerCase() },
-      {
-        handle,
-        status: 'active',
-        accessToken: access_token || '',
-        refreshToken: refresh_token || '',
-      },
-      { upsert: true, new: true }
-    );
+    const user = await User.findById(targetUserId);
+    if (!user || !user.zernioProfileId) {
+      return res.status(400).json({ message: 'User or Zernio Profile not found' });
+    }
+
+    // Retrieve all connected accounts from Zernio
+    const { data } = await zernio.accounts.listAccounts({
+      query: {
+        profileId: user.zernioProfileId
+      }
+    });
+
+    if (data && data.accounts) {
+      for (const account of data.accounts) {
+        await SocialAccount.findOneAndUpdate(
+          { userId: user._id, platform: account.platform.toLowerCase() },
+          {
+            accountId: account._id,
+            handle: account.handle || 'connected_account',
+            status: account.status || 'active',
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
 
     // Redirect user browser back to client dashboard accounts page
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -87,8 +128,44 @@ const syncAccounts = async (req, res) => {
   }
 };
 
+// @desc    Disconnect / Delete a connected social account
+// @route   DELETE /api/social-auth/:id
+// @access  Private
+const disconnectAccount = async (req, res) => {
+  try {
+    const account = await SocialAccount.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+
+    if (!account) {
+      return res.status(404).json({ message: 'Social account connection not found' });
+    }
+
+    // Call Zernio API using the SDK to delete/disconnect the account
+    if (account.accountId) {
+      try {
+        await zernio.accounts.delete({
+          path: { accountId: account.accountId },
+        });
+      } catch (err) {
+        console.error(`Failed to delete account on Zernio: ${err.message}`);
+      }
+    }
+
+    // Update status to disconnected locally so it is hidden from sync
+    account.status = 'disconnected';
+    await account.save();
+
+    res.json({ message: 'Account disconnected successfully', accountId: account._id });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getConnectUrl,
   handleCallback,
   syncAccounts,
+  disconnectAccount,
 };

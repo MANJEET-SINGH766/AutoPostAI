@@ -1,22 +1,9 @@
 const cron = require('node-cron');
 const Post = require('../models/Post');
 const SocialAccount = require('../models/SocialAccount');
+const { default: Zernio } = require('@zernio/node');
 
-// Simulated platform publisher call (mocking Zernio publish requests)
-const publishToPlatform = async (platform, handle, text, accessToken) => {
-  console.log(`📡 [Mock Publish] Publishing to ${platform.toUpperCase()} (@${handle}): "${text.substring(0, 40)}..."`);
-  
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  // Simulate success rate (95% success rate for simulation reliability)
-  const isSuccess = Math.random() < 0.95;
-  if (!isSuccess) {
-    throw new Error('API connection timeout to social platform provider');
-  }
-
-  return { success: true, platformPostId: `sim_${Math.random().toString(36).substr(2, 9)}` };
-};
+const zernio = new Zernio({ apiKey: process.env.ZERNIO_API_KEY });
 
 // Main publisher job execution logic
 const checkAndPublishPosts = async () => {
@@ -42,33 +29,32 @@ const checkAndPublishPosts = async () => {
 
       console.log(`⚙️ Processing Post ID: ${post._id}`);
 
-      let anyFailures = false;
-      const errors = [];
+      try {
+        const platforms = post.accounts
+          .filter(acc => acc.accountId)
+          .map(acc => ({
+            platform: acc.platform,
+            accountId: acc.accountId
+          }));
 
-      for (const account of post.accounts) {
-        try {
-          // Trigger the platform-specific publishing API call
-          await publishToPlatform(
-            account.platform,
-            account.handle,
-            post.content.text,
-            account.accessToken
-          );
-        } catch (err) {
-          console.error(`❌ Failed to publish to ${account.platform.toUpperCase()} (@${account.handle}): ${err.message}`);
-          errors.push(`${account.platform.toUpperCase()}: ${err.message}`);
-          anyFailures = true;
+        if (platforms.length === 0) {
+          throw new Error('No connected accounts with Zernio Account IDs found for this post');
         }
-      }
 
-      // 4. Update final post status based on dispatch results
-      if (anyFailures) {
-        post.status = 'failed';
-        console.log(`⚠️ Post ID ${post._id} finished processing with some failures`);
-      } else {
+        await zernio.posts.createPost({
+          body: {
+            content: post.content.text,
+            platforms: platforms,
+            publishNow: true
+          }
+        });
+
         post.status = 'completed';
         post.publishedAt = new Date();
-        console.log(`✅ Post ID ${post._id} successfully published to all targets`);
+        console.log(`✅ Post ID ${post._id} successfully published via Zernio`);
+      } catch (err) {
+        console.error(`❌ Failed to publish Post ID ${post._id} via Zernio: ${err.message}`);
+        post.status = 'failed';
       }
 
       await post.save();
